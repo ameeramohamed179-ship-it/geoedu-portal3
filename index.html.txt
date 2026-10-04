@@ -1,0 +1,1550 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GeoEdu Portal — بوابة التعليم المكاني | د. أميرة محمد</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+<style>
+/* ============================================================
+   GEOEDU PORTAL — كل الأنماط في مكان واحد
+   بإشراف: د. أميرة محمد
+============================================================ */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --purple: #8B5CF6;
+  --pink: #EC4899;
+  --orange: #F59E0B;
+  --cyan: #06B6D4;
+  --green: #10B981;
+  --red: #EF4444;
+  --gradient-1: linear-gradient(135deg, #8B5CF6, #EC4899);
+  --gradient-2: linear-gradient(135deg, #06B6D4, #10B981);
+  --gradient-3: linear-gradient(135deg, #F59E0B, #EF4444);
+}
+
+html, body {
+  font-family: 'Cairo', sans-serif;
+  min-height: 100vh;
+  direction: rtl;
+  background: linear-gradient(135deg, #FEF3C7 0%, #E0F2FE 50%, #FCE7F3 100%);
+  color: #1e1b4b;
+  overflow-x: hidden;
+}
+
+/* ========== Blobs Animation ========== */
+.bg-blob {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.45;
+  z-index: 0;
+  pointer-events: none;
+}
+.blob-1 {
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, #8B5CF6, transparent);
+  top: -100px; right: -100px;
+  animation: float 20s ease-in-out infinite;
+}
+.blob-2 {
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, #EC4899, transparent);
+  bottom: -100px; left: -100px;
+  animation: float 25s ease-in-out infinite reverse;
+}
+.blob-3 {
+  width: 350px; height: 350px;
+  background: radial-gradient(circle, #F59E0B, transparent);
+  top: 40%; left: 30%;
+  animation: float 30s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(40px, -40px) scale(1.1); }
+  66% { transform: translate(-30px, 30px) scale(0.95); }
+}
+
+/* ========== Watermark ========== */
+.watermark {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 9999;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(139, 92, 246, 0.35);
+  animation: watermarkGlow 3s ease-in-out infinite;
+}
+.watermark-logo {
+  width: 44px;
+  height: 44px;
+  animation: logoSpin 20s linear infinite;
+}
+.watermark-text { display: flex; flex-direction: column; line-height: 1.2; }
+.watermark-name {
+  font-weight: 900;
+  font-size: 16px;
+  background: var(--gradient-1);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.watermark-sub { font-size: 10px; color: #6b7280; }
+
+@keyframes logoSpin { to { transform: rotate(360deg); } }
+@keyframes watermarkGlow {
+  0%, 100% { box-shadow: 0 8px 32px rgba(139, 92, 246, 0.35); transform: translateY(0); }
+  50% { box-shadow: 0 12px 40px rgba(236, 72, 153, 0.55); transform: translateY(-3px); }
+}
+
+/* ========== Theme Toggle ========== */
+.theme-toggle {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 900;
+  width: 46px;
+  height: 46px;
+  border: none;
+  border-radius: 14px;
+  background: var(--gradient-1);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4);
+  transition: all 0.3s ease;
+}
+.theme-toggle:hover { transform: translateY(-2px) scale(1.05); }
+
+/* ========== Stats Toggle ========== */
+.stats-toggle-btn {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 900;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 14px;
+  background: var(--gradient-2);
+  color: white;
+  font-family: 'Cairo', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 8px 24px rgba(6, 182, 212, 0.4);
+  transition: all 0.25s ease;
+}
+.stats-toggle-btn:hover { transform: translateY(-2px) scale(1.03); }
+
+/* ========== Layout ========== */
+.container {
+  position: relative;
+  z-index: 10;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 90px 20px 120px;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(20px);
+  border-radius: 28px;
+  padding: 40px 32px;
+  width: 100%;
+  max-width: 460px;
+  box-shadow: 0 20px 60px rgba(139, 92, 246, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  animation: cardIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(30px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ========== Header ========== */
+.card-header { text-align: center; margin-bottom: 24px; }
+.main-logo {
+  width: 110px;
+  height: 110px;
+  margin: 0 auto 12px;
+  display: block;
+  filter: drop-shadow(0 8px 20px rgba(139, 92, 246, 0.25));
+}
+.card-header h1 {
+  font-size: 28px;
+  font-weight: 900;
+  background: var(--gradient-1);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 6px;
+}
+.subtitle { color: #6b7280; font-size: 13px; }
+
+/* ========== Live counter ========== */
+.live-counter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(236, 72, 153, 0.1));
+  border-radius: 14px;
+  font-size: 13px;
+  color: #4c1d95;
+  margin-bottom: 24px;
+  border: 1px solid rgba(139, 92, 246, 0.2);
+}
+.live-counter strong { font-size: 18px; color: var(--purple); font-weight: 900; }
+.pulse-dot {
+  width: 10px; height: 10px;
+  background: var(--green);
+  border-radius: 50%;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.3); }
+}
+
+/* ========== Form ========== */
+.form { display: flex; flex-direction: column; gap: 18px; }
+.input-group { display: flex; flex-direction: column; gap: 6px; }
+.input-group label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.input-group label i { color: var(--purple); }
+.input-group input {
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 2px solid #e5e7eb;
+  font-size: 15px;
+  font-family: inherit;
+  background: white;
+  transition: all 0.25s ease;
+  outline: none;
+}
+.input-group input:focus {
+  border-color: var(--purple);
+  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15);
+  transform: translateY(-2px);
+}
+
+/* ========== Buttons ========== */
+.btn-primary {
+  padding: 14px 24px;
+  border: none;
+  border-radius: 14px;
+  background: var(--gradient-1);
+  color: white;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.25s ease;
+  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.35);
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(139, 92, 246, 0.5);
+}
+.btn-primary:active { transform: scale(0.97); }
+.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+.btn-secondary {
+  padding: 12px 20px;
+  border: 2px solid var(--purple);
+  border-radius: 14px;
+  background: white;
+  color: var(--purple);
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+.btn-secondary:disabled { opacity: 0.4; cursor: not-allowed; border-color: #d1d5db; color: #9ca3af; }
+.btn-secondary:not(:disabled):hover { background: var(--purple); color: white; }
+
+.btn-ghost {
+  background: none;
+  border: none;
+  color: var(--purple);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 10px;
+  width: 100%;
+  margin-top: 12px;
+  transition: all 0.2s;
+}
+.btn-ghost:hover { color: var(--pink); text-decoration: underline; }
+
+.btn-notify {
+  width: 100%;
+  margin-top: 12px;
+  padding: 12px 16px;
+  border: 2px dashed rgba(139, 92, 246, 0.4);
+  border-radius: 14px;
+  background: rgba(139, 92, 246, 0.05);
+  color: #7c3aed;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.25s ease;
+}
+.btn-notify:hover { background: rgba(139, 92, 246, 0.12); border-style: solid; transform: translateY(-2px); }
+.btn-notify.enabled { background: linear-gradient(135deg, #10B981, #059669); color: white; border: 2px solid transparent; }
+
+/* ========== Modal ========== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(30, 27, 75, 0.7);
+  backdrop-filter: blur(8px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000;
+}
+.modal-overlay.active { display: flex; }
+
+.modal-card {
+  background: white;
+  border-radius: 24px;
+  padding: 32px 28px;
+  width: 100%;
+  max-width: 440px;
+  position: relative;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.3);
+  animation: modalIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  max-height: 92vh;
+  overflow-y: auto;
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.9) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-close {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #f3f4f6;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  font-size: 16px;
+  transition: all 0.2s;
+}
+.modal-close:hover { background: #fee2e2; color: var(--red); }
+
+.modal-header { text-align: center; margin-bottom: 20px; }
+.lock-icon { font-size: 48px; margin-bottom: 8px; }
+.modal-header h2 { font-size: 22px; font-weight: 800; color: #1e1b4b; margin-bottom: 6px; }
+.modal-sub { color: #6b7280; font-size: 13px; }
+.modal-sub strong { color: var(--purple); }
+
+/* ========== Demo OTP Box ========== */
+.demo-otp-box {
+  background: linear-gradient(135deg, #FEF3C7, #FCE7F3);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 20px;
+  border: 2px dashed var(--orange);
+  text-align: center;
+}
+.demo-otp-box p { font-size: 12px; color: #92400e; font-weight: 600; margin-bottom: 8px; }
+.demo-otp-value { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.demo-otp-value span {
+  font-family: 'Courier New', monospace;
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: 8px;
+  background: var(--gradient-1);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.demo-otp-value button {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  color: var(--purple);
+  transition: all 0.2s;
+}
+.demo-otp-value button:hover { background: var(--purple); color: white; }
+
+/* ========== OTP Inputs ========== */
+.otp-inputs {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  direction: ltr;
+  margin-bottom: 20px;
+}
+.otp-inputs input {
+  width: 52px;
+  height: 60px;
+  text-align: center;
+  font-size: 24px;
+  font-weight: 800;
+  font-family: 'Courier New', monospace;
+  border: 2px solid #e5e7eb;
+  border-radius: 14px;
+  background: #f9fafb;
+  outline: none;
+  transition: all 0.2s ease;
+}
+.otp-inputs input:focus {
+  border-color: var(--purple);
+  background: white;
+  transform: scale(1.05);
+  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15);
+}
+.otp-inputs input.filled {
+  border-color: var(--green);
+  background: #ecfdf5;
+  color: var(--green);
+}
+.otp-inputs.shake { animation: shake 0.5s ease-in-out; }
+.otp-inputs.shake input { border-color: var(--red); }
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-6px); }
+  20%, 40%, 60%, 80% { transform: translateX(6px); }
+}
+
+/* ========== Countdown ========== */
+.countdown-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+  position: relative;
+}
+.countdown-ring { transform: rotate(-90deg); }
+#countdownCircle { transition: stroke-dashoffset 1s linear, stroke 0.5s ease; }
+.countdown-text {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: 'Courier New', monospace;
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--purple);
+}
+
+.modal-actions { display: flex; flex-direction: column; gap: 10px; }
+
+/* ========== Success Screen ========== */
+.success-card { text-align: center; position: relative; overflow: hidden; }
+.success-icon { display: flex; justify-content: center; margin-bottom: 16px; }
+.check-path {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: drawCheck 0.8s 0.3s ease forwards;
+}
+@keyframes drawCheck { to { stroke-dashoffset: 0; } }
+.success-title {
+  font-size: 24px;
+  font-weight: 900;
+  background: var(--gradient-2);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 6px;
+}
+.success-sub { color: #6b7280; font-size: 13px; margin-bottom: 20px; }
+
+.metadata-box {
+  background: #f9fafb;
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 20px;
+  text-align: right;
+  border: 1px solid #e5e7eb;
+}
+.meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  font-size: 12px;
+  border-bottom: 1px dashed #e5e7eb;
+}
+.meta-row:last-child { border-bottom: none; }
+.meta-row span { color: #6b7280; }
+.meta-row strong { color: #1e1b4b; font-weight: 700; }
+.meta-row code {
+  font-family: monospace;
+  background: white;
+  padding: 2px 8px;
+  border-radius: 6px;
+  color: var(--purple);
+  border: 1px solid #e5e7eb;
+}
+
+/* ========== Confetti ========== */
+.confetti-piece {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  opacity: 0.9;
+  animation: confettiFall 3s ease-in forwards;
+}
+@keyframes confettiFall {
+  0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(600px) rotate(720deg); opacity: 0; }
+}
+
+/* ========== Audit Panel ========== */
+.audit-panel {
+  margin-top: 16px;
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+}
+.audit-panel h3 { font-size: 14px; color: #374151; margin-bottom: 12px; }
+.audit-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  background: white;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  font-size: 12px;
+  border-right: 3px solid var(--purple);
+}
+.audit-row.verified { border-right-color: var(--green); }
+.audit-row.expired { border-right-color: var(--red); }
+.audit-row code {
+  font-family: monospace;
+  background: #f3f4f6;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+/* ========== Stats Panel ========== */
+.stats-panel {
+  position: fixed;
+  top: 0;
+  right: -420px;
+  width: 400px;
+  height: 100vh;
+  background: linear-gradient(180deg, #ffffff 0%, #faf5ff 100%);
+  box-shadow: -8px 0 40px rgba(139, 92, 246, 0.2);
+  z-index: 950;
+  overflow-y: auto;
+  padding: 80px 20px 40px;
+  transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.stats-panel.open { right: 0; }
+
+.stats-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 2px dashed rgba(139, 92, 246, 0.2);
+}
+.stats-header h3 {
+  font-size: 16px;
+  font-weight: 800;
+  color: #1e1b4b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.stats-refresh {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: var(--gradient-1);
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.stats-refresh:hover { transform: rotate(180deg) scale(1.1); }
+
+.stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
+.stat-tile {
+  border-radius: 14px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+.tile-purple { background: linear-gradient(135deg, #8B5CF6, #7C3AED); }
+.tile-green  { background: linear-gradient(135deg, #10B981, #059669); }
+.tile-red    { background: linear-gradient(135deg, #EF4444, #DC2626); }
+.tile-amber  { background: linear-gradient(135deg, #F59E0B, #D97706); }
+.tile-pink   { background: linear-gradient(135deg, #EC4899, #DB2777); }
+.tile-cyan   { background: linear-gradient(135deg, #06B6D4, #0891B2); }
+
+.tile-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+.tile-body { display: flex; flex-direction: column; line-height: 1.2; }
+.tile-label { font-size: 10px; opacity: 0.9; font-weight: 600; }
+.tile-value { font-size: 18px; font-weight: 900; }
+
+.stats-chart-wrap {
+  background: white;
+  border-radius: 14px;
+  padding: 12px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(139, 92, 246, 0.15);
+}
+.stats-chart-wrap h4 { font-size: 12px; color: #6b7280; margin-bottom: 8px; font-weight: 700; }
+
+.stats-last {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+  background: #f9fafb;
+  border-radius: 12px;
+  font-size: 11px;
+  color: #6b7280;
+  border-right: 3px solid var(--purple);
+}
+.stats-last code {
+  font-family: monospace;
+  background: white;
+  padding: 2px 8px;
+  border-radius: 6px;
+  color: var(--purple);
+  font-weight: 700;
+  font-size: 12px;
+}
+.badge-status { padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; }
+.badge-status.verified { background: #d1fae5; color: #065f46; }
+.badge-status.expired  { background: #fee2e2; color: #991b1b; }
+.badge-status.pending  { background: #fef3c7; color: #92400e; }
+
+/* ========== Toast ========== */
+.toast-container {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+.toast {
+  padding: 14px 24px;
+  border-radius: 14px;
+  color: white;
+  font-weight: 700;
+  font-size: 13px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+  animation: toastIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: auto;
+  min-width: 280px;
+  text-align: center;
+}
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.9); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.toast.success { background: linear-gradient(135deg, #10B981, #059669); }
+.toast.error { background: linear-gradient(135deg, #EF4444, #DC2626); }
+.toast.info { background: linear-gradient(135deg, #8B5CF6, #7C3AED); }
+.toast.warn { background: linear-gradient(135deg, #F59E0B, #D97706); }
+
+.hidden { display: none !important; }
+
+/* ========== Dark Mode ========== */
+html.dark body {
+  background: linear-gradient(135deg, #0f0a1f 0%, #1a0f2e 50%, #0a1628 100%);
+  color: #e5e7eb;
+}
+html.dark .card { background: rgba(30, 27, 75, 0.7); border-color: rgba(139, 92, 246, 0.25); }
+html.dark .card-header h1 { background: linear-gradient(135deg, #A78BFA, #F472B6); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+html.dark .subtitle { color: #9ca3af; }
+html.dark .live-counter { color: #c4b5fd; }
+html.dark .input-group label { color: #d1d5db; }
+html.dark .input-group input { background: rgba(15, 10, 31, 0.6); border-color: rgba(139, 92, 246, 0.3); color: #f3f4f6; }
+html.dark .modal-card { background: linear-gradient(180deg, #1e1b4b 0%, #2d1b4e 100%); border: 1px solid rgba(139, 92, 246, 0.3); }
+html.dark .modal-header h2 { color: #f3f4f6; }
+html.dark .modal-sub { color: #9ca3af; }
+html.dark .otp-inputs input { background: rgba(15, 10, 31, 0.7); border-color: rgba(139, 92, 246, 0.3); color: #f3f4f6; }
+html.dark .otp-inputs input.filled { border-color: #34d399; background: rgba(16, 185, 129, 0.15); color: #6ee7b7; }
+html.dark .watermark { background: rgba(30, 27, 75, 0.9); }
+html.dark .watermark-sub { color: #9ca3af; }
+html.dark .stats-panel { background: linear-gradient(180deg, #1e1b4b 0%, #0f0a1f 100%); }
+html.dark .stats-header h3 { color: #f3f4f6; }
+html.dark .stats-chart-wrap { background: rgba(15, 10, 31, 0.6); border-color: rgba(139, 92, 246, 0.25); }
+html.dark .stats-last { background: rgba(15, 10, 31, 0.6); color: #9ca3af; }
+html.dark .audit-panel { background: rgba(15, 10, 31, 0.6); }
+html.dark .audit-row { background: rgba(30, 27, 75, 0.7); color: #e5e7eb; }
+html.dark .metadata-box { background: rgba(15, 10, 31, 0.6); border-color: rgba(139, 92, 246, 0.25); }
+html.dark .meta-row strong { color: #f3f4f6; }
+html.dark .btn-secondary { background: rgba(15, 10, 31, 0.6); color: #a78bfa; }
+
+/* ========== Responsive ========== */
+@media (max-width: 480px) {
+  .card { padding: 28px 20px; border-radius: 22px; }
+  .otp-inputs { gap: 6px; }
+  .otp-inputs input { width: 44px; height: 54px; font-size: 20px; }
+  .demo-otp-value span { font-size: 24px; letter-spacing: 4px; }
+  .watermark { padding: 8px 12px; }
+  .watermark-name { font-size: 13px; }
+  .watermark-sub { font-size: 9px; }
+  .stats-panel { width: 88vw; right: -90vw; }
+  .stats-toggle-btn span { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ========== Animated Background ========== -->
+<div class="bg-blob blob-1"></div>
+<div class="bg-blob blob-2"></div>
+<div class="bg-blob blob-3"></div>
+
+<!-- ========== Theme Toggle ========== -->
+<button class="theme-toggle" id="themeToggleBtn" aria-label="تبديل الوضع الليلي">
+  <i class="fa-solid fa-circle-half-stroke"></i>
+</button>
+
+<!-- ========== Stats Toggle ========== -->
+<button class="stats-toggle-btn" onclick="toggleStats()">
+  <i class="fa-solid fa-chart-pie"></i>
+  <span>الإحصائيات</span>
+</button>
+
+<!-- ========== Watermark — د. أميرة محمد ========== -->
+<div class="watermark">
+  <svg class="watermark-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#8B5CF6"/>
+        <stop offset="100%" stop-color="#EC4899"/>
+      </linearGradient>
+      <linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#F59E0B"/>
+        <stop offset="100%" stop-color="#EF4444"/>
+      </linearGradient>
+    </defs>
+    <circle cx="50" cy="50" r="46" fill="none" stroke="url(#g1)" stroke-width="2.5"/>
+    <circle cx="50" cy="50" r="40" fill="none" stroke="url(#g1)" stroke-width="1" opacity="0.5"/>
+    <g fill="none" stroke="url(#g1)" stroke-width="1.5">
+      <ellipse cx="50" cy="50" rx="30" ry="30"/>
+      <ellipse cx="50" cy="50" rx="18" ry="30"/>
+      <ellipse cx="50" cy="50" rx="30" ry="10"/>
+      <ellipse cx="50" cy="50" rx="30" ry="20"/>
+      <line x1="20" y1="50" x2="80" y2="50"/>
+    </g>
+    <g transform="translate(50 45)">
+      <path d="M 0 -12 C -7 -12 -11 -7 -11 -2 C -11 5 -2 12 0 15 C 2 12 11 5 11 -2 C 11 -7 7 -12 0 -12 Z" fill="url(#g2)"/>
+      <circle cx="0" cy="-2" r="3.5" fill="white"/>
+    </g>
+    <text x="50" y="82" text-anchor="middle" font-family="Cairo, sans-serif" font-size="12" font-weight="900" fill="url(#g1)" letter-spacing="2">A·M</text>
+  </svg>
+  <div class="watermark-text">
+    <span class="watermark-name">د. أميرة محمد</span>
+    <span class="watermark-sub">أستاذة نظم المعلومات الجغرافية</span>
+  </div>
+</div>
+
+<!-- ========== Main Container ========== -->
+<main class="container">
+  <div class="card">
+    <div class="card-header">
+      <svg class="main-logo" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="lg1" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#8B5CF6"/>
+            <stop offset="100%" stop-color="#EC4899"/>
+          </linearGradient>
+          <linearGradient id="lg2" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#F59E0B"/>
+            <stop offset="100%" stop-color="#EF4444"/>
+          </linearGradient>
+          <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#8B5CF6" stop-opacity="0.3"/>
+            <stop offset="100%" stop-color="#8B5CF6" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <circle cx="100" cy="100" r="90" fill="url(#glow)"/>
+        <circle cx="100" cy="100" r="85" fill="none" stroke="url(#lg1)" stroke-width="2" stroke-dasharray="6 10" opacity="0.6">
+          <animateTransform attributeName="transform" type="rotate" from="0 100 100" to="360 100 100" dur="30s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="100" cy="100" r="70" fill="none" stroke="url(#lg1)" stroke-width="3"/>
+        <g fill="none" stroke="#06B6D4" stroke-width="1.2" opacity="0.6">
+          <ellipse cx="100" cy="100" rx="70" ry="70"/>
+          <ellipse cx="100" cy="100" rx="48" ry="70"/>
+          <ellipse cx="100" cy="100" rx="24" ry="70"/>
+          <ellipse cx="100" cy="100" rx="70" ry="22"/>
+          <ellipse cx="100" cy="100" rx="70" ry="45"/>
+          <line x1="30" y1="100" x2="170" y2="100"/>
+          <line x1="100" y1="30" x2="100" y2="170"/>
+        </g>
+        <g fill="url(#lg1)" opacity="0.85">
+          <path d="M 70 80 Q 82 74 90 84 Q 94 96 86 106 Q 76 110 70 100 Z"/>
+          <path d="M 118 92 Q 132 88 142 98 Q 146 112 134 122 Q 120 126 112 116 Z"/>
+          <path d="M 88 130 Q 102 126 110 138 Q 108 152 94 148 Q 82 142 88 130 Z"/>
+        </g>
+        <g transform="translate(100 50)">
+          <path d="M 0 -18 C -10 -18 -16 -10 -16 -3 C -16 7 -4 18 0 24 C 4 18 16 7 16 -3 C 16 -10 10 -18 0 -18 Z" fill="url(#lg2)"/>
+          <circle cx="0" cy="-3" r="6" fill="white"/>
+        </g>
+        <text x="100" y="180" text-anchor="middle" font-family="Cairo, sans-serif" font-size="16" font-weight="900" fill="url(#lg1)" letter-spacing="3">A · M</text>
+      </svg>
+      <h1>التحقق الآمن</h1>
+      <p class="subtitle">GeoEdu Portal — بإشراف د. أميرة محمد</p>
+    </div>
+
+    <div class="live-counter">
+      <span class="pulse-dot"></span>
+      <span>رموز فريدة تم توليدها:</span>
+      <strong id="counterValue">0</strong>
+    </div>
+
+    <form id="requestForm" class="form">
+      <div class="input-group">
+        <label for="email"><i class="fa-solid fa-envelope"></i> البريد الإلكتروني</label>
+        <input type="email" id="email" placeholder="student@university.edu" required>
+      </div>
+      <div class="input-group">
+        <label for="mobile"><i class="fa-solid fa-mobile-screen"></i> رقم الجوال</label>
+        <input type="tel" id="mobile" placeholder="+201234567890" required>
+      </div>
+      <button type="submit" id="sendBtn" class="btn-primary">
+        <i class="fa-solid fa-paper-plane"></i>
+        إرسال الرمز التأكيدي
+      </button>
+    </form>
+
+    <button class="btn-notify" id="enableNotifBtn" onclick="enableNotifications()">
+      <i class="fa-solid fa-bell"></i>
+      <span>تفعيل إشعارات انتهاء الصلاحية</span>
+    </button>
+
+    <button class="btn-ghost" onclick="toggleAuditPanel()">
+      <i class="fa-solid fa-list-check"></i> سجل التدقيق
+    </button>
+
+    <div id="auditPanel" class="audit-panel hidden">
+      <h3>🔍 سجل آخر 5 رموز</h3>
+      <div id="auditList"></div>
+    </div>
+  </div>
+</main>
+
+<!-- ========== OTP Verification Modal ========== -->
+<div id="screen-otp" class="modal-overlay">
+  <div class="modal-card">
+    <button class="modal-close" onclick="cancelOtp()">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+    <div class="modal-header">
+      <div class="lock-icon">🔐</div>
+      <h2>الرمز التأكيدي الخاص بك</h2>
+      <p class="modal-sub">تم الإرسال إلى <strong id="maskedContact">—</strong></p>
+    </div>
+    <div class="demo-otp-box">
+      <p>الرمز التجريبي:</p>
+      <div class="demo-otp-value">
+        <span id="demoOtpValue">------</span>
+        <button onclick="copyOtp()" title="نسخ">
+          <i class="fa-solid fa-copy"></i>
+        </button>
+      </div>
+    </div>
+    <div class="otp-inputs" id="otpInputs">
+      <input type="text" maxlength="1" inputmode="numeric" data-index="0">
+      <input type="text" maxlength="1" inputmode="numeric" data-index="1">
+      <input type="text" maxlength="1" inputmode="numeric" data-index="2">
+      <input type="text" maxlength="1" inputmode="numeric" data-index="3">
+      <input type="text" maxlength="1" inputmode="numeric" data-index="4">
+      <input type="text" maxlength="1" inputmode="numeric" data-index="5">
+    </div>
+    <div class="countdown-container">
+      <svg class="countdown-ring" width="80" height="80">
+        <circle cx="40" cy="40" r="34" stroke="#e5e7eb" stroke-width="6" fill="none"/>
+        <circle id="countdownCircle" cx="40" cy="40" r="34" stroke="#8B5CF6" stroke-width="6"
+                fill="none" stroke-dasharray="213.6" stroke-dashoffset="0" stroke-linecap="round"/>
+      </svg>
+      <div class="countdown-text" id="countdownText">05:00</div>
+    </div>
+    <div class="modal-actions">
+      <button id="verifyBtn" class="btn-primary">
+        <i class="fa-solid fa-check"></i> تأكيد الرمز
+      </button>
+      <button id="resendBtn" class="btn-secondary" disabled>
+        <i class="fa-solid fa-rotate-right"></i> إعادة الإرسال (<span id="resendTimer">30</span>)
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== Success Modal ========== -->
+<div id="screen-success" class="modal-overlay">
+  <div class="modal-card success-card">
+    <div class="confetti-container" id="confetti"></div>
+    <div class="success-icon">
+      <svg viewBox="0 0 100 100" width="100" height="100">
+        <circle cx="50" cy="50" r="45" fill="none" stroke="url(#grad)" stroke-width="4"/>
+        <path d="M30 50 L45 65 L70 38" fill="none" stroke="url(#grad)" stroke-width="5"
+              stroke-linecap="round" stroke-linejoin="round" class="check-path"/>
+        <defs>
+          <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#8B5CF6"/>
+            <stop offset="100%" stop-color="#EC4899"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+    <h2 class="success-title">🎉 تم التحقق بنجاح</h2>
+    <p class="success-sub">تم توثيق دخولك إلى بوابة GeoEdu</p>
+    <div class="metadata-box">
+      <div class="meta-row"><span>وقت الإصدار:</span><strong id="metaIssued">—</strong></div>
+      <div class="meta-row"><span>Hash المختصر:</span><code id="metaHash">—</code></div>
+      <div class="meta-row"><span>رقم العداد:</span><strong id="metaCounter">—</strong></div>
+    </div>
+    <button class="btn-primary" onclick="closeSuccess()">
+      <i class="fa-solid fa-rocket"></i> تم — العودة للبداية
+    </button>
+  </div>
+</div>
+
+<!-- ========== Stats Panel ========== -->
+<aside id="statsPanel" class="stats-panel"></aside>
+
+<!-- ========== Toasts ========== -->
+<div id="toastContainer" class="toast-container"></div>
+
+<script>
+/* ============================================================
+   GEOEDU PORTAL — كل السكربتات في مكان واحد
+   بإشراف: د. أميرة محمد
+============================================================ */
+
+// ========== UI Helpers ==========
+const UI = {
+  $(sel) { return document.querySelector(sel); },
+  $$(sel) { return document.querySelectorAll(sel); },
+
+  toast(message, type = 'info', duration = 4000) {
+    const container = document.getElementById('toastContainer');
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    const icons = {
+      success: 'fa-circle-check',
+      error: 'fa-circle-xmark',
+      info: 'fa-circle-info',
+      warn: 'fa-triangle-exclamation',
+    };
+    t.innerHTML = `<i class="fa-solid ${icons[type] || icons.info}"></i> ${message}`;
+    container.appendChild(t);
+    setTimeout(() => {
+      t.style.opacity = '0';
+      t.style.transform = 'translateY(20px)';
+      t.style.transition = 'all 0.3s ease';
+      setTimeout(() => t.remove(), 300);
+    }, duration);
+  },
+
+  maskContact(email, mobile) {
+    const e = email ? email.replace(/^(.{2}).+(@.+)$/, '$1***$2') : '';
+    const m = mobile ? mobile.replace(/(.{3}).+(.{3})$/, '$1***$2') : '';
+    return [e, m].filter(Boolean).join(' • ');
+  },
+
+  updateCounter() {
+    const c = parseInt(localStorage.getItem('otp_counter') || '0', 10);
+    const el = document.getElementById('counterValue');
+    if (el) el.textContent = c.toLocaleString('ar-EG');
+  },
+};
+
+// ========== Audit Log ==========
+const AuditLog = {
+  KEY: 'otp_audit_log',
+  MAX: 50,
+  _read() { try { return JSON.parse(localStorage.getItem(this.KEY) || '[]'); } catch { return []; } },
+  _write(list) { localStorage.setItem(this.KEY, JSON.stringify(list.slice(-this.MAX))); },
+  add(record) {
+    const list = this._read();
+    list.push({ otp: record.otp, hash: record.hash, counter: record.counter, issuedAt: record.issuedAt, status: 'pending' });
+    this._write(list);
+  },
+  markVerified(otp) {
+    const list = this._read();
+    const e = list.find(x => x.otp === otp);
+    if (e) { e.status = 'verified'; e.verifiedAt = new Date().toISOString(); }
+    this._write(list);
+  },
+  markExpired(otp) {
+    const list = this._read();
+    const e = list.find(x => x.otp === otp);
+    if (e) e.status = 'expired';
+    this._write(list);
+  },
+  getRecent(n = 5) { return this._read().slice(-n).reverse(); },
+};
+
+// ========== OTP Generator (unique, non-repeatable) ==========
+async function generateUniqueOTP(userId) {
+  const randomBytes = new Uint8Array(32);
+  crypto.getRandomValues(randomBytes);
+  const randomHex = Array.from(randomBytes).map(b => b.toString(16).padStart(2, '0')).join('');
+  const timestamp = Date.now().toString(36);
+  const counter = parseInt(localStorage.getItem('otp_counter') || '0', 10) + 1;
+  localStorage.setItem('otp_counter', counter.toString());
+
+  const fingerprint = [navigator.userAgent, `${screen.width}x${screen.height}`,
+    Intl.DateTimeFormat().resolvedOptions().timeZone, navigator.language].join('|');
+
+  const seed = `${userId}|${timestamp}|${counter}|${fingerprint}|${randomHex}`;
+  const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(seed));
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+  const numericHash = BigInt('0x' + hashHex);
+  const otp = (numericHash % 900000n + 100000n).toString();
+
+  const history = JSON.parse(localStorage.getItem('otp_history') || '[]');
+  if (history.includes(otp)) return generateUniqueOTP(userId);
+  history.push(otp);
+  if (history.length > 10000) history.shift();
+  localStorage.setItem('otp_history', JSON.stringify(history));
+
+  const record = {
+    otp, userId, counter,
+    hash: hashHex.substring(0, 16),
+    issuedAt: new Date().toISOString(),
+    expiresAt: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+  };
+  localStorage.setItem('otp_current', JSON.stringify(record));
+  AuditLog.add(record);
+
+  console.log(`%c🔐 OTP: ${otp}`, 'background: linear-gradient(135deg,#8B5CF6,#EC4899); color:white; padding:6px 14px; border-radius:8px; font-weight:bold; font-size:14px;');
+  return record;
+}
+
+// ========== OTP Inputs ==========
+const OTPInputs = {
+  inputs: [],
+  onComplete: null,
+  init(cb) {
+    this.inputs = Array.from(document.querySelectorAll('#otpInputs input'));
+    this.onComplete = cb;
+    this.inputs.forEach((inp, i) => {
+      inp.addEventListener('input', (e) => {
+        let v = e.target.value.replace(/\D/g, '');
+        e.target.value = v;
+        if (v && i < this.inputs.length - 1) this.inputs[i + 1].focus();
+        e.target.classList.toggle('filled', !!v);
+        if (this.inputs.every(x => x.value) && this.onComplete) this.onComplete(this.getValue());
+      });
+      inp.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !e.target.value && i > 0) {
+          this.inputs[i - 1].focus();
+          this.inputs[i - 1].value = '';
+          this.inputs[i - 1].classList.remove('filled');
+        }
+        if (e.key === 'Enter') document.getElementById('verifyBtn').click();
+      });
+      inp.addEventListener('paste', (e) => {
+        e.preventDefault();
+        const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '');
+        if (text.length >= 6) {
+          this.inputs.forEach((inp, idx) => {
+            inp.value = text[idx] || '';
+            inp.classList.toggle('filled', !!inp.value);
+          });
+          this.inputs[5].focus();
+          if (this.onComplete) this.onComplete(this.getValue());
+        }
+      });
+    });
+  },
+  getValue() { return this.inputs.map(i => i.value).join(''); },
+  clear() { this.inputs.forEach(i => { i.value = ''; i.classList.remove('filled'); }); },
+  shake() {
+    const wrap = document.getElementById('otpInputs');
+    wrap.classList.add('shake');
+    setTimeout(() => wrap.classList.remove('shake'), 500);
+  },
+};
+
+// ========== Countdown ==========
+const Countdown = {
+  intervalId: null, seconds: 300, maxSeconds: 300, onExpire: null,
+  start(seconds, onExpire) {
+    this.stop();
+    this.seconds = seconds;
+    this.maxSeconds = seconds;
+    this.onExpire = onExpire;
+    this._render();
+    this.intervalId = setInterval(() => {
+      this.seconds--;
+      this._render();
+      if (this.seconds <= 0) { this.stop(); if (this.onExpire) this.onExpire(); }
+    }, 1000);
+  },
+  stop() { if (this.intervalId) clearInterval(this.intervalId); this.intervalId = null; },
+  _render() {
+    const m = Math.floor(this.seconds / 60);
+    const s = this.seconds % 60;
+    const text = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    const textEl = document.getElementById('countdownText');
+    const circle = document.getElementById('countdownCircle');
+    if (textEl) textEl.textContent = text;
+    if (circle) {
+      const circumference = 213.6;
+      const ratio = this.seconds / this.maxSeconds;
+      circle.style.strokeDashoffset = String(circumference * (1 - ratio));
+      let color = '#10B981';
+      if (this.seconds < 60) color = '#EF4444';
+      else if (this.seconds < 180) color = '#F59E0B';
+      circle.setAttribute('stroke', color);
+      textEl.style.color = color;
+    }
+  },
+};
+
+// ========== Push Notifications ==========
+const PushNotify = {
+  permission: 'default',
+  timers: {},
+  async init() {
+    if (!('Notification' in window)) return false;
+    this.permission = Notification.permission;
+    if (this.permission === 'default') {
+      const req = async () => {
+        try {
+          const p = await Notification.requestPermission();
+          this.permission = p;
+          if (p === 'granted') {
+            this.show('🔔 تم تفعيل الإشعارات', { body: 'سنذكرك عند اقتراب انتهاء صلاحية الرمز' });
+          }
+        } catch (e) { console.warn(e); }
+        document.removeEventListener('click', req);
+      };
+      document.addEventListener('click', req, { once: true });
+    }
+    return this.permission === 'granted';
+  },
+  show(title, options = {}) {
+    const opts = { dir: 'rtl', lang: 'ar', vibrate: [200, 100, 200], ...options };
+    if (this.permission === 'granted') {
+      try { return new Notification(title, opts); } catch (e) { console.warn(e); }
+    }
+    UI.toast(`${title}${opts.body ? ' — ' + opts.body : ''}`, 'info', 5000);
+  },
+  scheduleExpiryWarnings(record) {
+    if (!record || !record.expiresAt) return;
+    const expiresAt = new Date(record.expiresAt).getTime();
+    const otpId = record.otp;
+    if (this.timers[otpId]) {
+      clearTimeout(this.timers[otpId].warn);
+      clearTimeout(this.timers[otpId].expire);
+    }
+    const warnDelay = expiresAt - Date.now() - 60000;
+    const expireDelay = expiresAt - Date.now();
+    const warn = setTimeout(() => {
+      this.show('⏰ الرمز على وشك الانتهاء', { body: 'يتبقى أقل من دقيقة — أكد الرمز الآن', requireInteraction: true });
+    }, Math.max(warnDelay, 0));
+    const expire = setTimeout(() => {
+      this.show('❌ انتهت صلاحية الرمز', { body: 'اطلب رمزاً جديداً للمتابعة', requireInteraction: true });
+      AuditLog.markExpired(otpId);
+    }, Math.max(expireDelay, 0));
+    this.timers[otpId] = { warn, expire };
+  },
+  cancelAll() {
+    Object.values(this.timers).forEach(t => { clearTimeout(t.warn); clearTimeout(t.expire); });
+    this.timers = {};
+  },
+};
+
+// ========== Theme Toggle ==========
+const ThemeManager = {
+  KEY: 'geoedu_theme',
+  init() {
+    const saved = localStorage.getItem(this.KEY) || 'auto';
+    this.apply(saved);
+    if (window.matchMedia) {
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+        if (localStorage.getItem(this.KEY) === 'auto') this.apply('auto');
+      });
+    }
+    const btn = document.getElementById('themeToggleBtn');
+    if (btn) btn.addEventListener('click', () => this.toggle());
+    this._updateIcon();
+  },
+  apply(mode) {
+    const isDark = mode === 'dark' || (mode === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    document.documentElement.classList.toggle('dark', isDark);
+    localStorage.setItem(this.KEY, mode);
+    this._updateIcon();
+  },
+  toggle() {
+    const current = localStorage.getItem(this.KEY) || 'auto';
+    const next = { auto: 'light', light: 'dark', dark: 'auto' }[current] || 'dark';
+    this.apply(next);
+    const labels = { light: '☀️ الوضع النهاري', dark: '🌙 الوضع الليلي', auto: '🔄 تلقائي حسب النظام' };
+    UI.toast(labels[next], 'info', 2000);
+  },
+  _updateIcon() {
+    const btn = document.getElementById('themeToggleBtn');
+    if (!btn) return;
+    const icon = btn.querySelector('i');
+    const mode = localStorage.getItem(this.KEY) || 'auto';
+    const isDark = document.documentElement.classList.contains('dark');
+    if (mode === 'auto') icon.className = 'fa-solid fa-circle-half-stroke';
+    else if (isDark) icon.className = 'fa-solid fa-sun';
+    else icon.className = 'fa-solid fa-moon';
+  },
+};
+
+// ========== Stats Dashboard ==========
+const Stats = {
+  chart: null,
+  getMetrics() {
+    const audit = JSON.parse(localStorage.getItem('otp_audit_log') || '[]');
+    const counter = parseInt(localStorage.getItem('otp_counter') || '0', 10);
+    const history = JSON.parse(localStorage.getItem('otp_history') || '[]');
+    const verified = audit.filter(a => a.status === 'verified').length;
+    const expired = audit.filter(a => a.status === 'expired').length;
+    const pending = audit.filter(a => a.status === 'pending').length;
+    const total = audit.length || 1;
+    const successRate = ((verified / total) * 100).toFixed(1);
+    const now = Date.now();
+    const buckets = Array(24).fill(0);
+    audit.forEach(e => {
+      const h = Math.floor((now - new Date(e.issuedAt).getTime()) / 3600000);
+      if (h >= 0 && h < 24) buckets[23 - h]++;
+    });
+    return { counter, historySize: history.length, auditSize: audit.length, verified, expired, pending, successRate, buckets, lastOtp: audit[audit.length - 1] };
+  },
+  render() {
+    const m = this.getMetrics();
+    const panel = document.getElementById('statsPanel');
+    if (!panel) return;
+    panel.innerHTML = `
+      <div class="stats-header">
+        <h3><i class="fa-solid fa-chart-line"></i> لوحة الإحصائيات</h3>
+        <button onclick="Stats.render()" class="stats-refresh"><i class="fa-solid fa-rotate"></i></button>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-tile tile-purple">
+          <div class="tile-icon"><i class="fa-solid fa-hashtag"></i></div>
+          <div class="tile-body"><span class="tile-label">إجمالي الرموز</span><strong class="tile-value">${m.counter.toLocaleString('ar-EG')}</strong></div>
+        </div>
+        <div class="stat-tile tile-green">
+          <div class="tile-icon"><i class="fa-solid fa-circle-check"></i></div>
+          <div class="tile-body"><span class="tile-label">تم التحقق</span><strong class="tile-value">${m.verified}</strong></div>
+        </div>
+        <div class="stat-tile tile-red">
+          <div class="tile-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+          <div class="tile-body"><span class="tile-label">منتهية</span><strong class="tile-value">${m.expired}</strong></div>
+        </div>
+        <div class="stat-tile tile-amber">
+          <div class="tile-icon"><i class="fa-solid fa-hourglass-half"></i></div>
+          <div class="tile-body"><span class="tile-label">معلّقة</span><strong class="tile-value">${m.pending}</strong></div>
+        </div>
+        <div class="stat-tile tile-pink">
+          <div class="tile-icon"><i class="fa-solid fa-bullseye"></i></div>
+          <div class="tile-body"><span class="tile-label">معدل النجاح</span><strong class="tile-value">${m.successRate}%</strong></div>
+        </div>
+        <div class="stat-tile tile-cyan">
+          <div class="tile-icon"><i class="fa-solid fa-database"></i></div>
+          <div class="tile-body"><span class="tile-label">في السجل</span><strong class="tile-value">${m.historySize}</strong></div>
+        </div>
+      </div>
+      <div class="stats-chart-wrap">
+        <h4>التوزيع على مدار 24 ساعة</h4>
+        <canvas id="statsChart" height="120"></canvas>
+      </div>
+      ${m.lastOtp ? `
+        <div class="stats-last">
+          <span>آخر رمز:</span>
+          <code>${m.lastOtp.otp.slice(0,2)}****${m.lastOtp.otp.slice(-2)}</code>
+          <span class="badge-status ${m.lastOtp.status}">${ {verified:'تم التحقق', expired:'منتهي', pending:'معلّق'}[m.lastOtp.status] }</span>
+        </div>
+      ` : ''}
+    `;
+    this._renderChart(m.buckets);
+  },
+  _renderChart(data) {
+    const canvas = document.getElementById('statsChart');
+    if (!canvas) return;
+    if (this.chart) this.chart.destroy();
+    const ctx = canvas.getContext('2d');
+    const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+    gradient.addColorStop(0, 'rgba(139, 92, 246, 0.8)');
+    gradient.addColorStop(1, 'rgba(236, 72, 153, 0.1)');
+    const labels = Array.from({ length: 24 }, (_, i) => {
+      const h = (new Date().getHours() - 23 + i + 24) % 24;
+      return `${String(h).padStart(2, '0')}:00`;
+    });
+    this.chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          data, borderColor: '#8B5CF6', backgroundColor: gradient,
+          borderWidth: 2, tension: 0.4, fill: true, pointRadius: 3,
+          pointBackgroundColor: '#EC4899', pointBorderColor: 'white', pointBorderWidth: 2,
+        }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { family: 'Cairo', size: 9 }, color: '#9ca3af', maxTicksLimit: 6 } },
+          y: { beginAtZero: true, grid: { color: 'rgba(139, 92, 246, 0.08)' }, ticks: { font: { family: 'Cairo', size: 10 }, stepSize: 1 } },
+        },
+      },
+    });
+  },
+  init() { this.render(); setInterval(() => this.render(), 8000); },
+};
+
+// ========== Verify Flow ==========
+const Verify = {
+  currentEmail: '', currentMobile: '',
+  resendInterval: null,
+  init() {
+    OTPInputs.init((code) => this.tryVerify(code));
+    document.getElementById('verifyBtn').addEventListener('click', () => {
+      const code = OTPInputs.getValue();
+      if (code.length !== 6) { OTPInputs.shake(); UI.toast('أدخل 6 أرقام كاملة', 'warn'); return; }
+      this.tryVerify(code);
+    });
+    document.getElementById('resendBtn').addEventListener('click', () => this.resend());
+  },
+  async send(email, mobile) {
+    this.currentEmail = email;
+    this.currentMobile = mobile;
+    const record = await generateUniqueOTP(email);
+    document.getElementById('maskedContact').textContent = UI.maskContact(email, mobile);
+    document.getElementById('demoOtpValue').textContent = record.otp;
+    OTPInputs.clear();
+    document.getElementById('screen-otp').classList.add('active');
+    Countdown.start(300, () => {
+      UI.toast('انتهت صلاحية الرمز — أعد الإرسال', 'error');
+      OTPInputs.shake();
+    });
+    this._startResendTimer(30);
+    UI.toast(`تم إرسال الرمز إلى ${UI.maskContact(email, mobile)}`, 'success');
+    UI.updateCounter();
+    PushNotify.scheduleExpiryWarnings(record);
+    PushNotify.show('🔐 رمزك جاهز', { body: 'أدخل الرمز خلال 5 دقائق' });
+  },
+  tryVerify(code) {
+    const stored = localStorage.getItem('otp_current');
+    if (!stored) { OTPInputs.shake(); UI.toast('لا يوجد رمز نشط', 'error'); return; }
+    const record = JSON.parse(stored);
+    if (Date.now() > new Date(record.expiresAt).getTime()) {
+      OTPInputs.shake();
+      AuditLog.markExpired(record.otp);
+      UI.toast('انتهت صلاحية الرمز', 'error');
+      localStorage.removeItem('otp_current');
+      return;
+    }
+    if (record.otp !== code) {
+      OTPInputs.shake();
+      AuditLog.markExpired(record.otp);
+      UI.toast('الرمز غير صحيح', 'error');
+      return;
+    }
+    AuditLog.markVerified(record.otp);
+    localStorage.removeItem('otp_current');
+    Countdown.stop();
+    PushNotify.cancelAll();
+    document.getElementById('metaIssued').textContent = new Date(record.issuedAt).toLocaleTimeString('ar-EG');
+    document.getElementById('metaHash').textContent = record.hash || '—';
+    document.getElementById('metaCounter').textContent = record.counter || '—';
+    document.getElementById('screen-otp').classList.remove('active');
+    document.getElementById('screen-success').classList.add('active');
+    this._confetti();
+    UI.toast('🎉 تم التحقق بنجاح', 'success');
+    localStorage.setItem('geoedu_session', JSON.stringify({ email: this.currentEmail, mobile: this.currentMobile, verifiedAt: new Date().toISOString() }));
+  },
+  _startResendTimer(seconds) {
+    const btn = document.getElementById('resendBtn');
+    const timerEl = document.getElementById('resendTimer');
+    btn.disabled = true;
+    let s = seconds;
+    timerEl.textContent = s;
+    if (this.resendInterval) clearInterval(this.resendInterval);
+    this.resendInterval = setInterval(() => {
+      s--;
+      timerEl.textContent = s;
+      if (s <= 0) { clearInterval(this.resendInterval); btn.disabled = false; }
+    }, 1000);
+  },
+  async resend() { await this.send(this.currentEmail, this.currentMobile); },
+  cancel() {
+    Countdown.stop();
+    if (this.resendInterval) clearInterval(this.resendInterval);
+    localStorage.removeItem('otp_current');
+    document.getElementById('screen-otp').classList.remove('active');
+    UI.toast('تم الإلغاء', 'info');
+  },
+  _confetti() {
+    const container = document.getElementById('confetti');
+    container.innerHTML = '';
+    const colors = ['#8B5CF6', '#EC4899', '#F59E0B', '#06B6D4', '#10B981'];
+    for (let i = 0; i < 60; i++) {
+      const p = document.createElement('div');
+      p.className = 'confetti-piece';
+      p.style.left = `${Math.random() * 100}%`;
+      p.style.background = colors[Math.floor(Math.random() * colors.length)];
+      p.style.animationDelay = `${Math.random() * 0.8}s`;
+      p.style.animationDuration = `${2 + Math.random() * 2}s`;
+      container.appendChild(p);
+      setTimeout(() => p.remove(), 5000);
+    }
+  },
+};
+
+// ========== Global Actions ==========
+window.copyOtp = async () => {
+  const otp = document.getElementById('demoOtpValue').textContent.trim();
+  try { await navigator.clipboard.writeText(otp); UI.toast('تم نسخ الرمز ✅', 'success', 2000); }
+  catch { UI.toast('تعذر النسخ', 'error'); }
+};
+window.cancelOtp = () => Verify.cancel();
+window.closeSuccess = () => { document.getElementById('screen-success').classList.remove('active'); };
+window.toggleStats = () => {
+  const panel = document.getElementById('statsPanel');
+  panel.classList.toggle('open');
+  if (panel.classList.contains('open')) Stats.render();
+};
+window.toggleAuditPanel = () => {
+  const panel = document.getElementById('auditPanel');
+  panel.classList.toggle('hidden');
+  if (!panel.classList.contains('hidden')) {
+    const rows = AuditLog.getRecent(5);
+    const list = document.getElementById('auditList');
+    if (!rows.length) { list.innerHTML = '<p style="font-size:12px;color:#9ca3af;">لا يوجد سجل بعد</p>'; return; }
+    list.innerHTML = rows.map(r => `
+      <div class="audit-row ${r.status}">
+        <div>
+          <code>${r.otp.slice(0, 2)}****${r.otp.slice(-2)}</code>
+          <span style="margin-right:8px;color:#6b7280;">#${r.counter}</span>
+        </div>
+        <span style="font-size:11px;color:#9ca3af;">${new Date(r.issuedAt).toLocaleTimeString('ar-EG')}</span>
+      </div>
+    `).join('');
+  }
+};
+window.enableNotifications = async () => {
+  const ok = await PushNotify.init();
+  const btn = document.getElementById('enableNotifBtn');
+  if (ok) {
+    btn.classList.add('enabled');
+    btn.innerHTML = '<i class="fa-solid fa-bell"></i><span>✅ الإشعارات مفعّلة</span>';
+    UI.toast('تم تفعيل الإشعارات', 'success');
+  } else {
+    UI.toast('لم يتم منح صلاحية الإشعارات', 'warn');
+  }
+};
+
+// ========== Init ==========
+document.addEventListener('DOMContentLoaded', () => {
+  ThemeManager.init();
+  Verify.init();
+  Stats.init();
+  UI.updateCounter();
+  setInterval(UI.updateCounter, 2000);
+
+  document.getElementById('requestForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('email').value.trim();
+    const mobile = document.getElementById('mobile').value.trim();
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRe.test(email)) { UI.toast('البريد الإلكتروني غير صحيح', 'error'); return; }
+    if (!/^\+?[0-9]{8,15}$/.test(mobile.replace(/\s/g, ''))) { UI.toast('رقم الجوال غير صحيح (أضف رمز الدولة)', 'error'); return; }
+    const btn = document.getElementById('sendBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جارٍ الإرسال...';
+    try {
+      await Verify.send(email, mobile);
+    } catch (err) {
+      console.error(err);
+      UI.toast('حدث خطأ أثناء الإرسال', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> إرسال الرمز التأكيدي';
+    }
+  });
+
+  console.log('%c🚀 GeoEdu Portal ready', 'color:#8B5CF6;font-weight:bold;font-size:14px;');
+  console.log('%c🎓 إشراف: د. أميرة محمد', 'color:#EC4899;font-weight:bold;font-size:13px;');
+});
+</script>
+</body>
+</html>
